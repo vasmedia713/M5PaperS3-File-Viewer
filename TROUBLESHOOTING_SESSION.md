@@ -165,12 +165,93 @@ Current text is very small (designed for LCD). Need to:
 2. **Refresh rate** - May need to optimize full vs partial refresh strategy
 3. **Touch calibration** - May need adjustment for accurate tap detection
 
-## Reference Links
+## Reference Links - CRITICAL FOR FUTURE DEVELOPMENT
 
-- **M5PaperS3 Factory Demo:** https://github.com/m5stack/M5PaperS3-UserDemo
-- **M5GFX Issue #119 (M5PaperS3 fix):** https://github.com/m5stack/M5GFX/issues/119
-- **M5GFX M5PaperS3 Docs:** https://github.com/m5stack/M5GFX/blob/master/docs/M5PaperS3.md
-- **M5Stack Docs:** https://docs.m5stack.com/en/core/papers3
+### 🔑 Key Solution Sources
+
+#### Primary Fix: M5GFX GitHub Issue
+**URL:** https://github.com/m5stack/M5GFX/issues/119
+**Title:** "m5paperS3 not working"
+**Key Insight:** The stable release (v0.1.16) has a bug with M5PaperS3. The fix is in the develop branch.
+**Solution:** Use `https://github.com/m5stack/M5GFX.git#develop` in platformio.ini
+**Why Important:** This is the ROOT CAUSE of the display not working. If you ever have display issues, check this first.
+
+#### M5PaperS3 Documentation
+**URL:** https://github.com/m5stack/M5GFX/blob/master/docs/M5PaperS3.md
+**Content:** Official M5GFX documentation for M5PaperS3 setup
+**Key Info:**
+- EPDiy library was required for v0.2.6 and earlier
+- v0.2.7+ removed EPDiy dependency
+- PSRAM must be enabled and set to Octal mode
+- Proper platformio.ini configuration examples
+
+#### M5Stack Official Docs
+**URL:** https://docs.m5stack.com/en/core/papers3
+**Content:** Hardware specifications and official examples
+**Key Info:**
+- Display: 960×540 @ 4.7" e-ink, 16-level grayscale
+- MCU: ESP32-S3
+- Display controller: Direct EPD control (NOT IT8951 like original M5Paper)
+
+#### M5PaperS3 Factory Demo Source Code
+**URL:** https://github.com/m5stack/M5PaperS3-UserDemo
+**Content:** Official factory firmware source code
+**Key Info:**
+- Uses M5Unified and M5GFX
+- Shows proper initialization sequence
+- Built on ESP-IDF v5.3.3
+- Good reference for display operations
+
+### 📚 Additional Resources
+
+#### M5Unified Library
+**URL:** https://github.com/m5stack/M5Unified
+**Content:** Unified library for all M5Stack devices
+**Note:** Auto-detects M5PaperS3 when using correct M5GFX version
+
+#### EPDiy Library (Historical Context)
+**URL:** https://github.com/vroland/epdiy
+**Note:** Required for older M5GFX versions (v0.2.6 and earlier), but NO LONGER NEEDED with develop branch
+
+### 🛠️ Specific Solutions Found
+
+#### Why Display Showed 0x0 Dimensions
+**Cause:** M5GFX v0.1.16 fails to initialize M5PaperS3 display controller
+**Evidence:** Serial output showed `Display width: 0, Display height: 0`
+**Fix:** Switch to M5GFX develop branch
+**Reference:** https://github.com/m5stack/M5GFX/issues/119#issuecomment-[specific comment]
+
+#### Why Speaker Made Strange Sounds
+**Cause:** M5Unified trying to initialize speaker with incorrect settings
+**Fix:** `cfg.internal_spk = false;` in M5.begin() config
+**Reference:** Common M5Stack initialization pattern
+
+#### Why clearDisplay() Didn't Work
+**Cause:** M5PaperS3 uses direct EPD control, not standard LCD API
+**Fix:** Use `fillScreen(TFT_WHITE)` instead of `clearDisplay()`
+**Reference:** M5GFX e-ink display best practices
+
+### 📋 Quick Reference Checklist
+
+When encountering display issues in the future:
+
+1. ✅ Check M5GFX version is using develop branch: `https://github.com/m5stack/M5GFX.git#develop`
+2. ✅ Verify PSRAM is enabled: `board_build.arduino.memory_type = qio_opi`
+3. ✅ Confirm build flag: `-DBOARD_HAS_PSRAM`
+4. ✅ Check serial output for display dimensions (should be 960x540, not 0x0)
+5. ✅ Use `fillScreen()` not `clearDisplay()`
+6. ✅ Always call `M5.Display.display()` to refresh e-ink
+7. ✅ Speaker disabled: `cfg.internal_spk = false`
+
+### 🔗 Community Resources
+
+**M5Stack Community Forum:**
+https://community.m5stack.com/topic/7108/paper-s3-questions
+Discussion about M5PaperS3 issues and solutions
+
+**Arduino M5PaperS3 Examples:**
+https://docs.m5stack.com/en/arduino/m5papers3/program
+Official Arduino examples for M5PaperS3
 
 ## Key Learnings
 
