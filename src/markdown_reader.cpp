@@ -19,10 +19,18 @@ void MarkdownReader::begin(const String& fname) {
 void MarkdownReader::loadContent() {
     content = "";
 
-    File file = LittleFS.open(filename, "r");
+    // Ensure filename starts with /files/
+    String filepath = filename;
+    if (!filepath.startsWith("/files/") && !filepath.startsWith("/")) {
+        filepath = "/files/" + filepath;
+    }
+
+    Serial.printf("Attempting to open: %s\n", filepath.c_str());
+
+    File file = LittleFS.open(filepath, "r");
     if (!file) {
-        Serial.printf("Failed to open file: %s\n", filename.c_str());
-        content = "Error: Could not open file.";
+        Serial.printf("Failed to open file: %s\n", filepath.c_str());
+        content = "Error: Could not open file.\n\nPath: " + filepath;
         return;
     }
 
@@ -31,7 +39,7 @@ void MarkdownReader::loadContent() {
     }
     file.close();
 
-    Serial.printf("Loaded %d bytes from %s\n", content.length(), filename.c_str());
+    Serial.printf("Loaded %d bytes from %s\n", content.length(), filepath.c_str());
 }
 
 void MarkdownReader::parseIntoPages() {
@@ -44,7 +52,7 @@ void MarkdownReader::parseIntoPages() {
     std::vector<String> currentPageLines;
     String line = "";
 
-    M5.Display.setTextSize(1);
+    M5.Display.setTextSize(4);
 
     for (size_t i = 0; i < content.length(); i++) {
         char c = content[i];
@@ -99,7 +107,7 @@ void MarkdownReader::draw() {
         M5.Display.fillScreen(COLOR_BG);
     }
 
-    M5.Display.setTextSize(1);
+    M5.Display.setTextSize(4);
     drawPage();
     drawNavigation();
     M5.Display.display();
@@ -120,7 +128,7 @@ void MarkdownReader::drawPage() {
     // Header
     M5.Display.fillRect(0, 0, SCREEN_WIDTH, 40, COLOR_FG);
     M5.Display.setTextColor(COLOR_BG);
-    M5.Display.setTextSize(1);
+    M5.Display.setTextSize(4);
     M5.Display.setCursor(MD_MARGIN, 15);
 
     String displayName = filename;
@@ -144,19 +152,19 @@ void MarkdownReader::applyMarkdownFormatting(const String& line, int& y) {
 
     // Simple markdown parsing
     if (processedLine.startsWith("# ")) {
-        M5.Display.setTextSize(2);
+        M5.Display.setTextSize(4);
         M5.Display.setCursor(MD_MARGIN, y);
         M5.Display.print(processedLine.substring(2));
-        M5.Display.setTextSize(1);
+        M5.Display.setTextSize(4);
         y += 10; // Extra spacing after header
     } else if (processedLine.startsWith("## ")) {
-        M5.Display.setTextSize(2);
+        M5.Display.setTextSize(4);
         M5.Display.setCursor(MD_MARGIN, y);
         M5.Display.print(processedLine.substring(3));
-        M5.Display.setTextSize(1);
+        M5.Display.setTextSize(4);
         y += 5;
     } else if (processedLine.startsWith("### ")) {
-        M5.Display.setTextSize(1);
+        M5.Display.setTextSize(4);
         M5.Display.setCursor(MD_MARGIN, y);
         M5.Display.setTextColor(COLOR_GRAY);
         M5.Display.print(processedLine.substring(4));
@@ -177,7 +185,7 @@ void MarkdownReader::drawNavigation() {
     M5.Display.fillRect(0, footerY, SCREEN_WIDTH, 30, COLOR_GRAY);
 
     M5.Display.setTextColor(COLOR_BG);
-    M5.Display.setTextSize(1);
+    M5.Display.setTextSize(4);
 
     String pageInfo = "Page " + String(currentPage + 1) + " of " + String(pages.size());
     drawCenteredText(pageInfo.c_str(), footerY + 10);

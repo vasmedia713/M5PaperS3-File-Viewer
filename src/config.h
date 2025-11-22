@@ -22,9 +22,9 @@
 #define CONFIG_DIR "/config"
 #define MANIFEST_FILE "/config/manifest.json"
 
-// Display Settings
-#define SCREEN_WIDTH 960
-#define SCREEN_HEIGHT 540
+// Display Settings (Portrait Mode)
+#define SCREEN_WIDTH 540
+#define SCREEN_HEIGHT 960
 #define REFRESH_INTERVAL 10  // Full refresh every N page turns
 
 // UI Colors (use TFT_ constants for better compatibility)
@@ -34,7 +34,7 @@
 
 // Touch Settings
 #define SWIPE_THRESHOLD 50   // Minimum distance for swipe detection
-#define TAP_THRESHOLD 10     // Maximum movement for tap detection
+#define TAP_THRESHOLD 50     // Maximum movement for tap detection (increased for e-ink touchscreen)
 
 // Markdown Settings
 #define MD_LINE_HEIGHT 24

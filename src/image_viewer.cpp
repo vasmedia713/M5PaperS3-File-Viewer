@@ -67,10 +67,21 @@ void ImageViewer::loadImage() {
 void ImageViewer::drawImage() {
     M5.Display.fillScreen(COLOR_BG);
 
-    File file = LittleFS.open(currentFilename, "r");
+    // Ensure filename starts with /files/
+    String filepath = currentFilename;
+    if (!filepath.startsWith("/files/") && !filepath.startsWith("/")) {
+        filepath = "/files/" + filepath;
+    }
+
+    Serial.printf("Attempting to open image: %s\n", filepath.c_str());
+
+    File file = LittleFS.open(filepath, "r");
     if (!file) {
-        Serial.printf("Failed to open image: %s\n", currentFilename.c_str());
-        drawCenteredText("Error loading image", SCREEN_HEIGHT / 2);
+        Serial.printf("Failed to open image: %s\n", filepath.c_str());
+        M5.Display.setTextSize(2);
+        drawCenteredText("Error loading image", SCREEN_HEIGHT / 2 - 20);
+        M5.Display.setTextSize(1);
+        drawCenteredText(filepath.c_str(), SCREEN_HEIGHT / 2 + 20);
         M5.Display.display();
         return;
     }
@@ -188,7 +199,7 @@ void ImageViewer::drawOverlay() {
     M5.Display.fillRect(0, overlayY, SCREEN_WIDTH, 60, COLOR_GRAY);
 
     M5.Display.setTextColor(COLOR_BG);
-    M5.Display.setTextSize(1);
+    M5.Display.setTextSize(4);
 
     // Image info
     String imageInfo = String(currentImageIndex + 1) + " / " + String(allImages.size());

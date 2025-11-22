@@ -42,20 +42,18 @@ void setup() {
     Serial.printf("Display width: %d\n", M5.Display.width());
     Serial.printf("Display height: %d\n", M5.Display.height());
 
-    // Set rotation
-    M5.Display.setRotation(1);
+    // Set rotation to portrait mode
+    M5.Display.setRotation(0);  // 0 = Portrait (540x960)
     Serial.printf("After rotation: %dx%d\n", M5.Display.width(), M5.Display.height());
 
     // Clear screen and draw splash
     Serial.println("Drawing splash screen...");
     M5.Display.fillScreen(TFT_WHITE);
     M5.Display.setTextColor(TFT_BLACK);
+    M5.Display.setTextSize(4);
+    drawCenteredText("M5Paper S3", SCREEN_HEIGHT / 2 - 40);
     M5.Display.setTextSize(3);
-    M5.Display.setCursor(100, 200);
-    M5.Display.println("M5Paper S3");
-    M5.Display.setTextSize(2);
-    M5.Display.setCursor(100, 250);
-    M5.Display.println("File Viewer");
+    drawCenteredText("File Viewer", SCREEN_HEIGHT / 2 + 20);
 
     Serial.println("Pushing to display...");
     M5.Display.display();
@@ -111,8 +109,8 @@ void loop() {
 
         auto touch = M5.Touch.getDetail();
         if (touch.wasPressed()) {
-            // Top-right corner = WiFi toggle
-            if (touch.x > SCREEN_WIDTH - 100 && touch.y < 40) {
+            // Top-right corner = WiFi toggle (adjusted for larger font and header)
+            if (touch.x > SCREEN_WIDTH - 150 && touch.y < 80) {
                 toggleWiFi();
             }
         }
@@ -132,20 +130,28 @@ void loop() {
                 String selectedFile = fileBrowser.getSelectedFile();
                 fileBrowser.clearSelection();
 
-                Serial.printf("Opening file: %s\n", selectedFile.c_str());
+                Serial.println("\n=== FILE SELECTED ===");
+                Serial.printf("Selected file: %s\n", selectedFile.c_str());
+                Serial.printf("File length: %d\n", selectedFile.length());
 
                 String lowerName = selectedFile;
                 lowerName.toLowerCase();
 
                 if (lowerName.endsWith(".md")) {
+                    Serial.println("Opening markdown file...");
                     currentState = STATE_MARKDOWN_READER;
                     markdownReader.begin(selectedFile);
                     markdownReader.draw();
+                    Serial.println("Markdown reader initialized");
                 } else if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg") ||
                            lowerName.endsWith(".png")) {
+                    Serial.println("Opening image file...");
                     currentState = STATE_IMAGE_VIEWER;
                     imageViewer.begin(selectedFile);
                     imageViewer.draw();
+                    Serial.println("Image viewer initialized");
+                } else {
+                    Serial.printf("Unknown file type: %s\n", selectedFile.c_str());
                 }
             }
             break;
@@ -183,7 +189,7 @@ void toggleWiFi() {
 
     M5.Display.fillScreen(COLOR_BG);
     M5.Display.setTextColor(COLOR_FG);
-    M5.Display.setTextSize(2);
+    M5.Display.setTextSize(4);
 
     if (wifiEnabled) {
         Serial.println("Starting WiFi server...");
@@ -195,26 +201,27 @@ void toggleWiFi() {
         delay(1000);
 
         M5.Display.fillScreen(COLOR_BG);
-        M5.Display.setTextSize(2);
-        drawCenteredText("WiFi Server Active", 100);
-
-        M5.Display.setTextSize(1);
-        drawCenteredText("Connect to WiFi:", 180);
+        M5.Display.setTextSize(3);
+        drawCenteredText("WiFi Server Active", 50);
 
         M5.Display.setTextSize(2);
-        drawCenteredText(WIFI_SSID, 220);
+        drawCenteredText("Connect to WiFi:", 120);
 
-        M5.Display.setTextSize(1);
-        drawCenteredText("Password:", 270);
+        M5.Display.setTextSize(3);
+        drawCenteredText(WIFI_SSID, 160);
 
         M5.Display.setTextSize(2);
-        drawCenteredText(WIFI_PASSWORD, 310);
+        drawCenteredText("Password:", 220);
 
-        M5.Display.setTextSize(1);
+        M5.Display.setTextSize(3);
+        drawCenteredText(WIFI_PASSWORD, 260);
+
+        M5.Display.setTextSize(2);
         String ipMsg = "Open: http://" + wifiServer.getIPAddress();
-        drawCenteredText(ipMsg.c_str(), 370);
+        drawCenteredText(ipMsg.c_str(), 330);
 
-        drawCenteredText("Touch top-right to exit", 450);
+        M5.Display.setTextSize(2);
+        drawCenteredText("Touch top-right to exit", 400);
 
         M5.Display.display();
 
