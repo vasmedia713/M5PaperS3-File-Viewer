@@ -50,10 +50,39 @@ void setup() {
     Serial.println("Drawing splash screen...");
     M5.Display.fillScreen(TFT_WHITE);
     M5.Display.setTextColor(TFT_BLACK);
+
+    // Top half: App name
+    M5.Display.setTextSize(5);
+    drawCenteredText("OmniBrowser", SCREEN_HEIGHT / 4 - 30);
     M5.Display.setTextSize(4);
-    drawCenteredText("M5Paper S3", SCREEN_HEIGHT / 2 - 40);
-    M5.Display.setTextSize(3);
-    drawCenteredText("File Viewer", SCREEN_HEIGHT / 2 + 20);
+    drawCenteredText("v.0", SCREEN_HEIGHT / 4 + 20);
+
+    // Bottom half: Logo
+    File logoFile = LittleFS.open("/logo.png", "r");
+    if (logoFile) {
+        size_t logoSize = logoFile.size();
+        uint8_t* logoBuffer = (uint8_t*)malloc(logoSize);
+
+        if (logoBuffer != nullptr) {
+            logoFile.read(logoBuffer, logoSize);
+            logoFile.close();
+
+            // Draw logo centered in bottom half
+            int logoY = SCREEN_HEIGHT / 2 + 100;
+            M5.Display.drawPng(logoBuffer, logoSize, 0, logoY, SCREEN_WIDTH, SCREEN_HEIGHT / 2 - 100);
+
+            free(logoBuffer);
+            Serial.println("Logo loaded successfully");
+        } else {
+            logoFile.close();
+            Serial.println("Failed to allocate memory for logo");
+        }
+    } else {
+        Serial.println("Logo file not found");
+        // Fallback text
+        M5.Display.setTextSize(3);
+        drawCenteredText("VAS MEDIA 713", SCREEN_HEIGHT * 3 / 4);
+    }
 
     Serial.println("Pushing to display...");
     M5.Display.display();

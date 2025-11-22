@@ -112,8 +112,9 @@ void ImageViewer::drawImage() {
             int imgHeight = jpeg.getHeight();
 
             Serial.printf("Image size: %dx%d\n", imgWidth, imgHeight);
+            Serial.printf("Screen size: %dx%d\n", SCREEN_WIDTH, SCREEN_HEIGHT);
 
-            // Calculate scaling to fit screen
+            // Calculate scaling to fit screen (preserve aspect ratio)
             float scaleX = (float)SCREEN_WIDTH / imgWidth;
             float scaleY = (float)SCREEN_HEIGHT / imgHeight;
             float scale = min(scaleX, scaleY);
@@ -121,14 +122,32 @@ void ImageViewer::drawImage() {
             int scaledWidth = imgWidth * scale;
             int scaledHeight = imgHeight * scale;
 
+            Serial.printf("Scale factor: %.2f\n", scale);
+            Serial.printf("Scaled size: %dx%d\n", scaledWidth, scaledHeight);
+
             // Center the image
             int offsetX = (SCREEN_WIDTH - scaledWidth) / 2;
             int offsetY = (SCREEN_HEIGHT - scaledHeight) / 2;
 
-            // Decode with scaling
-            jpeg.setPixelType(RGB565_BIG_ENDIAN);
-            jpeg.decode(offsetX, offsetY, 0);
+            Serial.printf("Offset: (%d, %d)\n", offsetX, offsetY);
+
             jpeg.close();
+
+            // Use M5GFX drawJpg with scaling - need to use different approach
+            // Create a temporary sprite for scaling
+            LGFX_Sprite sprite(&M5.Display);
+            sprite.setColorDepth(16);
+
+            if (sprite.createSprite(scaledWidth, scaledHeight)) {
+                sprite.drawJpg(buffer, fileSize, 0, 0);
+                sprite.pushSprite(offsetX, offsetY);
+                sprite.deleteSprite();
+                Serial.println("Image rendered via sprite scaling");
+            } else {
+                Serial.println("Failed to create sprite, trying direct draw");
+                // Fallback: draw at original size centered (will be clipped)
+                M5.Display.drawJpg(buffer, fileSize, offsetX, offsetY);
+            }
         } else {
             Serial.println("Failed to decode JPEG");
             drawCenteredText("Invalid JPEG", SCREEN_HEIGHT / 2);
@@ -161,10 +180,45 @@ void ImageViewer::drawImage() {
         }
 
         Serial.printf("Loaded PNG into memory: %d bytes\n", fileSize);
+        Serial.printf("Screen size: %dx%d\n", SCREEN_WIDTH, SCREEN_HEIGHT);
 
-        // Decode PNG from memory buffer
-        // M5.Display.drawPng() handles scaling and centering automatically
-        M5.Display.drawPng(buffer, fileSize, 0, 0);
+        // Decode PNG to get dimensions first
+        // Use sprite for proper scaling like JPEG
+        LGFX_Sprite tempSprite(&M5.Display);
+        tempSprite.setColorDepth(16);
+        tempSprite.createSprite(1, 1); // Minimal sprite just to decode dimensions
+        tempSprite.drawPng(buffer, fileSize, 0, 0);
+        int imgWidth = tempSprite.width();
+        int imgHeight = tempSprite.height();
+        tempSprite.deleteSprite();
+
+        // Calculate scaling
+        float scaleX = (float)SCREEN_WIDTH / imgWidth;
+        float scaleY = (float)SCREEN_HEIGHT / imgHeight;
+        float scale = min(scaleX, scaleY);
+
+        int scaledWidth = imgWidth * scale;
+        int scaledHeight = imgHeight * scale;
+
+        int offsetX = (SCREEN_WIDTH - scaledWidth) / 2;
+        int offsetY = (SCREEN_HEIGHT - scaledHeight) / 2;
+
+        Serial.printf("PNG size: %dx%d, scaled to: %dx%d at offset (%d,%d)\n",
+                      imgWidth, imgHeight, scaledWidth, scaledHeight, offsetX, offsetY);
+
+        // Create sprite for scaled rendering
+        LGFX_Sprite sprite(&M5.Display);
+        sprite.setColorDepth(16);
+
+        if (sprite.createSprite(scaledWidth, scaledHeight)) {
+            sprite.drawPng(buffer, fileSize, 0, 0);
+            sprite.pushSprite(offsetX, offsetY);
+            sprite.deleteSprite();
+            Serial.println("PNG rendered via sprite scaling");
+        } else {
+            Serial.println("Failed to create sprite, trying direct draw");
+            M5.Display.drawPng(buffer, fileSize, offsetX, offsetY);
+        }
 
         free(buffer);
     } else {

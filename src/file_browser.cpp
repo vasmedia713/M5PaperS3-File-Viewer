@@ -76,7 +76,7 @@ void FileBrowser::drawHeader() {
     M5.Display.setTextColor(COLOR_BG);
     M5.Display.setTextSize(4);
     M5.Display.setCursor(20, 20);
-    M5.Display.print("File Browser");
+    M5.Display.print("OmniBrowser v.0");
 
     // Draw WiFi button in top-right corner
     M5.Display.setTextSize(4);
