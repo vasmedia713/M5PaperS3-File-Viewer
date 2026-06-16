@@ -15,7 +15,9 @@ void FileBrowser::begin() {
 
 void FileBrowser::loadFiles() {
     mdFiles.clear();
+    textFiles.clear();
     imageFiles.clear();
+    cbzFiles.clear();
 
     Serial.println("\n=== SCANNING FILES ===");
     File root = LittleFS.open("/files");
@@ -36,16 +38,22 @@ void FileBrowser::loadFiles() {
             if (lowerName.endsWith(".md")) {
                 mdFiles.push_back(filename);
                 Serial.printf("  -> Added to mdFiles\n");
+            } else if (lowerName.endsWith(".txt")) {
+                textFiles.push_back(filename);
+                Serial.printf("  -> Added to textFiles\n");
             } else if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg") ||
-                       lowerName.endsWith(".png")) {
+                       lowerName.endsWith(".png") || lowerName.endsWith(".webp")) {
                 imageFiles.push_back(filename);
                 Serial.printf("  -> Added to imageFiles\n");
+            } else if (lowerName.endsWith(".cbz")) {
+                cbzFiles.push_back(filename);
+                Serial.printf("  -> Added to cbzFiles\n");
             }
         }
         file = root.openNextFile();
     }
 
-    Serial.printf("\nTotal: %d markdown files and %d images\n", mdFiles.size(), imageFiles.size());
+    Serial.printf("\nTotal: %d markdown files, %d text files, %d images, and %d CBZ files\n", mdFiles.size(), textFiles.size(), imageFiles.size(), cbzFiles.size());
 
     // Print all files
     if (mdFiles.size() > 0) {
@@ -54,10 +62,22 @@ void FileBrowser::loadFiles() {
             Serial.printf("  [%d] %s\n", i, mdFiles[i].c_str());
         }
     }
+    if (textFiles.size() > 0) {
+        Serial.println("\nText files:");
+        for (size_t i = 0; i < textFiles.size(); i++) {
+            Serial.printf("  [%d] %s\n", i, textFiles[i].c_str());
+        }
+    }
     if (imageFiles.size() > 0) {
         Serial.println("\nImage files:");
         for (size_t i = 0; i < imageFiles.size(); i++) {
             Serial.printf("  [%d] %s\n", i, imageFiles[i].c_str());
+        }
+    }
+    if (cbzFiles.size() > 0) {
+        Serial.println("\nCBZ files:");
+        for (size_t i = 0; i < cbzFiles.size(); i++) {
+            Serial.printf("  [%d] %s\n", i, cbzFiles[i].c_str());
         }
     }
     Serial.println("===================\n");
@@ -105,7 +125,7 @@ String FileBrowser::truncateFilename(String filename) {
 
 void FileBrowser::drawFileList() {
     int y = HEADER_HEIGHT + 20;  // Start with more padding from header
-    int totalFiles = mdFiles.size() + imageFiles.size();
+    int totalFiles = mdFiles.size() + textFiles.size() + imageFiles.size() + cbzFiles.size();
 
     if (totalFiles == 0) {
         M5.Display.setTextColor(COLOR_FG);
@@ -145,16 +165,16 @@ void FileBrowser::drawFileList() {
         }
     }
 
-    // Draw section: Images
-    if (imageFiles.size() > 0 && y + ITEM_HEIGHT < SCREEN_HEIGHT) {
+    // Draw section: Text Files
+    if (textFiles.size() > 0 && y + ITEM_HEIGHT < SCREEN_HEIGHT) {
         y += 10;  // Small gap between sections
         M5.Display.setTextColor(COLOR_GRAY);
         M5.Display.setTextSize(2);
         M5.Display.setCursor(20, y);
-        M5.Display.print("IMAGES");
+        M5.Display.print("TEXT");
         y += 45;  // Space after section header
 
-        for (size_t i = 0; i < imageFiles.size() && y + ITEM_HEIGHT < SCREEN_HEIGHT; i++) {
+        for (size_t i = 0; i < textFiles.size() && y + ITEM_HEIGHT < SCREEN_HEIGHT; i++) {
             bool isSelected = (selectedIndex == (int)(mdFiles.size() + i));
 
             // Draw selection background
@@ -168,7 +188,67 @@ void FileBrowser::drawFileList() {
             // Draw filename with truncation
             M5.Display.setTextSize(3);
             M5.Display.setCursor(30, y + 25);  // Vertically centered in item
+            String displayName = truncateFilename(textFiles[i]);
+            M5.Display.print(displayName);
+
+            y += ITEM_HEIGHT;
+        }
+    }
+
+    // Draw section: Images
+    if (imageFiles.size() > 0 && y + ITEM_HEIGHT < SCREEN_HEIGHT) {
+        y += 10;  // Small gap between sections
+        M5.Display.setTextColor(COLOR_GRAY);
+        M5.Display.setTextSize(2);
+        M5.Display.setCursor(20, y);
+        M5.Display.print("IMAGES");
+        y += 45;  // Space after section header
+
+        for (size_t i = 0; i < imageFiles.size() && y + ITEM_HEIGHT < SCREEN_HEIGHT; i++) {
+            bool isSelected = (selectedIndex == (int)(mdFiles.size() + textFiles.size() + i));
+
+            // Draw selection background
+            if (isSelected) {
+                M5.Display.fillRect(10, y, SCREEN_WIDTH - 20, ITEM_HEIGHT - 10, COLOR_GRAY);
+                M5.Display.setTextColor(COLOR_BG);
+            } else {
+                M5.Display.setTextColor(COLOR_FG);
+            }
+
+            // Draw filename with truncation
+            M5.Display.setTextSize(3);
+            M5.Display.setCursor(30, y + 25);  // Vertically centered in item
             String displayName = truncateFilename(imageFiles[i]);
+            M5.Display.print(displayName);
+
+            y += ITEM_HEIGHT;
+        }
+    }
+
+    // Draw section: Comics (CBZ)
+    if (cbzFiles.size() > 0 && y + ITEM_HEIGHT < SCREEN_HEIGHT) {
+        y += 10;  // Small gap between sections
+        M5.Display.setTextColor(COLOR_GRAY);
+        M5.Display.setTextSize(2);
+        M5.Display.setCursor(20, y);
+        M5.Display.print("COMICS");
+        y += 45;  // Space after section header
+
+        for (size_t i = 0; i < cbzFiles.size() && y + ITEM_HEIGHT < SCREEN_HEIGHT; i++) {
+            bool isSelected = (selectedIndex == (int)(mdFiles.size() + textFiles.size() + imageFiles.size() + i));
+
+            // Draw selection background
+            if (isSelected) {
+                M5.Display.fillRect(10, y, SCREEN_WIDTH - 20, ITEM_HEIGHT - 10, COLOR_GRAY);
+                M5.Display.setTextColor(COLOR_BG);
+            } else {
+                M5.Display.setTextColor(COLOR_FG);
+            }
+
+            // Draw filename with truncation
+            M5.Display.setTextSize(3);
+            M5.Display.setCursor(30, y + 25);  // Vertically centered in item
+            String displayName = truncateFilename(cbzFiles[i]);
             M5.Display.print(displayName);
 
             y += ITEM_HEIGHT;
@@ -189,9 +269,9 @@ void FileBrowser::handleTouch() {
         Serial.printf("Touch at Y: %d\n", touchY);
 
         int index = getTouchIndex(touchY);
-        Serial.printf("Touch index: %d (total files: %d)\n", index, mdFiles.size() + imageFiles.size());
+        Serial.printf("Touch index: %d (total files: %d)\n", index, mdFiles.size() + textFiles.size() + imageFiles.size() + cbzFiles.size());
 
-        if (index >= 0 && index < (int)(mdFiles.size() + imageFiles.size())) {
+        if (index >= 0 && index < (int)(mdFiles.size() + textFiles.size() + imageFiles.size() + cbzFiles.size())) {
             selectedIndex = index;
             draw();
 
@@ -222,9 +302,15 @@ void FileBrowser::handleTouch() {
                 if (selectedIndex < (int)mdFiles.size()) {
                     selectedFile = mdFiles[selectedIndex];
                     Serial.printf("✓✓✓ SELECTED MARKDOWN [%d]: %s\n", selectedIndex, selectedFile.c_str());
+                } else if (selectedIndex < (int)(mdFiles.size() + textFiles.size())) {
+                    selectedFile = textFiles[selectedIndex - mdFiles.size()];
+                    Serial.printf("✓✓✓ SELECTED TEXT [%d]: %s\n", selectedIndex - mdFiles.size(), selectedFile.c_str());
+                } else if (selectedIndex < (int)(mdFiles.size() + textFiles.size() + imageFiles.size())) {
+                    selectedFile = imageFiles[selectedIndex - mdFiles.size() - textFiles.size()];
+                    Serial.printf("✓✓✓ SELECTED IMAGE [%d]: %s\n", selectedIndex - mdFiles.size() - textFiles.size(), selectedFile.c_str());
                 } else {
-                    selectedFile = imageFiles[selectedIndex - mdFiles.size()];
-                    Serial.printf("✓✓✓ SELECTED IMAGE [%d]: %s\n", selectedIndex - mdFiles.size(), selectedFile.c_str());
+                    selectedFile = cbzFiles[selectedIndex - mdFiles.size() - textFiles.size() - imageFiles.size()];
+                    Serial.printf("✓✓✓ SELECTED CBZ [%d]: %s\n", selectedIndex - mdFiles.size() - textFiles.size() - imageFiles.size(), selectedFile.c_str());
                 }
                 fileSelected = true;
             } else {
@@ -243,7 +329,6 @@ void FileBrowser::handleButtons() {
 
 int FileBrowser::getTouchIndex(int touchY) {
     int y = HEADER_HEIGHT + 20;  // Start position matching drawFileList
-    int totalFiles = mdFiles.size() + imageFiles.size();
 
     // Skip "DOCUMENTS" header
     y += 45;
@@ -257,6 +342,21 @@ int FileBrowser::getTouchIndex(int touchY) {
         y += ITEM_HEIGHT;
     }
 
+    // Check if we have text files section
+    if (textFiles.size() > 0) {
+        y += 10;  // Gap between sections
+        y += 45;  // Skip "TEXT" header
+
+        // Check text files section
+        for (size_t i = 0; i < textFiles.size(); i++) {
+            // Check if touch is within this item's bounds
+            if (touchY >= y && touchY <= y + ITEM_HEIGHT - 10) {
+                return mdFiles.size() + i;
+            }
+            y += ITEM_HEIGHT;
+        }
+    }
+
     // Check if we have images section
     if (imageFiles.size() > 0) {
         y += 10;  // Gap between sections
@@ -266,7 +366,22 @@ int FileBrowser::getTouchIndex(int touchY) {
         for (size_t i = 0; i < imageFiles.size(); i++) {
             // Check if touch is within this item's bounds
             if (touchY >= y && touchY <= y + ITEM_HEIGHT - 10) {
-                return mdFiles.size() + i;
+                return mdFiles.size() + textFiles.size() + i;
+            }
+            y += ITEM_HEIGHT;
+        }
+    }
+
+    // Check if we have CBZ section
+    if (cbzFiles.size() > 0) {
+        y += 10;  // Gap between sections
+        y += 45;  // Skip "COMICS" header
+
+        // Check CBZ section
+        for (size_t i = 0; i < cbzFiles.size(); i++) {
+            // Check if touch is within this item's bounds
+            if (touchY >= y && touchY <= y + ITEM_HEIGHT - 10) {
+                return mdFiles.size() + textFiles.size() + imageFiles.size() + i;
             }
             y += ITEM_HEIGHT;
         }

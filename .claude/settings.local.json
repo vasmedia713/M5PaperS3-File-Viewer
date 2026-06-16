@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:docs.m5stack.com)"
+      "WebFetch(domain:docs.m5stack.com)",
+      "Bash(pio run *)"
     ],
     "deny": [],
     "ask": []

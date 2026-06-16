@@ -45,7 +45,7 @@ void ImageViewer::getAllImages() {
             lowerName.toLowerCase();
 
             if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg") ||
-                lowerName.endsWith(".png")) {
+                lowerName.endsWith(".png") || lowerName.endsWith(".webp")) {
                 allImages.push_back(filename);
             }
         }
@@ -154,7 +154,7 @@ void ImageViewer::drawImage() {
         }
 
         free(buffer);
-    } else if (lowerName.endsWith(".png")) {
+    } else if (lowerName.endsWith(".png") || lowerName.endsWith(".webp")) {
         // For PNG, load into memory buffer first (workaround for M5GFX + LittleFS incompatibility)
         size_t fileSize = file.size();
         uint8_t* buffer = (uint8_t*)malloc(fileSize);

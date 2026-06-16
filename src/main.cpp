@@ -4,13 +4,17 @@
 #include "utils.h"
 #include "file_browser.h"
 #include "markdown_reader.h"
+#include "text_reader.h"
 #include "image_viewer.h"
+#include "cbz_reader.h"
 #include "wifi_server.h"
 
 // Global objects
 FileBrowser fileBrowser;
 MarkdownReader markdownReader;
+TextReader textReader;
 ImageViewer imageViewer;
+CBZReader cbzReader;
 WiFiFileServer wifiServer;
 
 // Current app state
@@ -172,13 +176,25 @@ void loop() {
                     markdownReader.begin(selectedFile);
                     markdownReader.draw();
                     Serial.println("Markdown reader initialized");
+                } else if (lowerName.endsWith(".txt")) {
+                    Serial.println("Opening text file...");
+                    currentState = STATE_TEXT_READER;
+                    textReader.begin(selectedFile);
+                    textReader.draw();
+                    Serial.println("Text reader initialized");
                 } else if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg") ||
-                           lowerName.endsWith(".png")) {
+                           lowerName.endsWith(".png") || lowerName.endsWith(".webp")) {
                     Serial.println("Opening image file...");
                     currentState = STATE_IMAGE_VIEWER;
                     imageViewer.begin(selectedFile);
                     imageViewer.draw();
                     Serial.println("Image viewer initialized");
+                } else if (lowerName.endsWith(".cbz")) {
+                    Serial.println("Opening CBZ file...");
+                    currentState = STATE_CBZ_READER;
+                    cbzReader.begin(selectedFile);
+                    cbzReader.draw();
+                    Serial.println("CBZ reader initialized");
                 } else {
                     Serial.printf("Unknown file type: %s\n", selectedFile.c_str());
                 }
@@ -195,10 +211,30 @@ void loop() {
             }
             break;
 
+        case STATE_TEXT_READER:
+            textReader.update();
+
+            if (textReader.shouldExit()) {
+                currentState = STATE_FILE_BROWSER;
+                fileBrowser.begin(); // Refresh file list
+                fileBrowser.draw();
+            }
+            break;
+
         case STATE_IMAGE_VIEWER:
             imageViewer.update();
 
             if (imageViewer.shouldExit()) {
+                currentState = STATE_FILE_BROWSER;
+                fileBrowser.begin(); // Refresh file list
+                fileBrowser.draw();
+            }
+            break;
+
+        case STATE_CBZ_READER:
+            cbzReader.update();
+
+            if (cbzReader.shouldExit()) {
                 currentState = STATE_FILE_BROWSER;
                 fileBrowser.begin(); // Refresh file list
                 fileBrowser.draw();

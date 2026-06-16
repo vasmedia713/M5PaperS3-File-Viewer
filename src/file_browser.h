@@ -26,7 +26,9 @@ private:
     String truncateFilename(String filename);
 
     std::vector<String> mdFiles;
+    std::vector<String> textFiles;
     std::vector<String> imageFiles;
+    std::vector<String> cbzFiles;
     int selectedIndex;
     int scrollOffset;
     bool fileSelected;

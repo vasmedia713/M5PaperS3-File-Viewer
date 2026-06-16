@@ -164,18 +164,34 @@ const char UPLOAD_HTML[] PROGMEM = R"rawliteral(
         </div>
 
         <div class="upload-section">
+            <h2>📄 Text File</h2>
+            <label for="txtFile" class="file-label">Choose .txt File</label>
+            <input type="file" id="txtFile" accept=".txt">
+            <div class="file-name" id="txtFileName">No file selected</div>
+            <button onclick="uploadFile('txt')">Upload Text</button>
+        </div>
+
+        <div class="upload-section">
             <h2>🖼️ Image</h2>
             <label for="imgFile" class="file-label">Choose Image</label>
-            <input type="file" id="imgFile" accept=".jpg,.jpeg,.png">
+            <input type="file" id="imgFile" accept=".jpg,.jpeg,.png,.webp">
             <div class="file-name" id="imgFileName">No file selected</div>
             <button onclick="uploadFile('img')">Upload Image</button>
+        </div>
+
+        <div class="upload-section">
+            <h2>📚 Comic Book (CBZ)</h2>
+            <label for="cbzFile" class="file-label">Choose .cbz File</label>
+            <input type="file" id="cbzFile" accept=".cbz">
+            <div class="file-name" id="cbzFileName">No file selected</div>
+            <button onclick="uploadFile('cbz')">Upload CBZ</button>
         </div>
 
         <div class="status" id="status"></div>
 
         <div class="device-info">
             Connected to: <strong>PaperS3-Files</strong><br>
-            Supported formats: .md, .jpg, .jpeg, .png
+            Supported formats: .md, .txt, .jpg, .jpeg, .png, .webp, .cbz
         </div>
     </div>
 
@@ -185,9 +201,19 @@ const char UPLOAD_HTML[] PROGMEM = R"rawliteral(
             document.getElementById('mdFileName').textContent = fileName;
         });
 
+        document.getElementById('txtFile').addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : 'No file selected';
+            document.getElementById('txtFileName').textContent = fileName;
+        });
+
         document.getElementById('imgFile').addEventListener('change', function(e) {
             const fileName = e.target.files[0] ? e.target.files[0].name : 'No file selected';
             document.getElementById('imgFileName').textContent = fileName;
+        });
+
+        document.getElementById('cbzFile').addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : 'No file selected';
+            document.getElementById('cbzFileName').textContent = fileName;
         });
 
         function showStatus(message, type) {
@@ -204,7 +230,16 @@ const char UPLOAD_HTML[] PROGMEM = R"rawliteral(
         }
 
         async function uploadFile(type) {
-            const fileInput = type === 'md' ? document.getElementById('mdFile') : document.getElementById('imgFile');
+            let fileInput;
+            if (type === 'md') {
+                fileInput = document.getElementById('mdFile');
+            } else if (type === 'txt') {
+                fileInput = document.getElementById('txtFile');
+            } else if (type === 'cbz') {
+                fileInput = document.getElementById('cbzFile');
+            } else {
+                fileInput = document.getElementById('imgFile');
+            }
             const file = fileInput.files[0];
 
             if (!file) {
@@ -230,6 +265,10 @@ const char UPLOAD_HTML[] PROGMEM = R"rawliteral(
                     fileInput.value = '';
                     if (type === 'md') {
                         document.getElementById('mdFileName').textContent = 'No file selected';
+                    } else if (type === 'txt') {
+                        document.getElementById('txtFileName').textContent = 'No file selected';
+                    } else if (type === 'cbz') {
+                        document.getElementById('cbzFileName').textContent = 'No file selected';
                     } else {
                         document.getElementById('imgFileName').textContent = 'No file selected';
                     }
